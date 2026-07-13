@@ -41,9 +41,7 @@ async function sendWaitlistEmail(email: string) {
   const { apiKey, fromEmail, toEmail } = getWaitlistEmailConfig();
 
   if (!apiKey || !fromEmail || !toEmail) {
-    return {
-      attempted: false as const
-    };
+    throw new Error("Waitlist email is not fully configured.");
   }
 
   const response = await fetch(resendApiUrl, {
@@ -91,6 +89,14 @@ export async function POST(request: Request) {
     await sendWaitlistEmail(email);
   } catch (error) {
     console.error("Failed to send waitlist email", error);
+
+    return Response.json(
+      {
+        error:
+          "Waitlist signup was saved, but email delivery is not configured correctly yet. Check your Resend domain and Vercel environment variables."
+      },
+      { status: 502 }
+    );
   }
 
   return Response.json({
